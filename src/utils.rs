@@ -10,7 +10,7 @@ pub fn solve(path_to_board: &str) {
     print_board(&initial_board);
 }
 
-fn create_initial_board(file_path: &str) -> SudokuBoardValues {
+pub fn create_initial_board(file_path: &str) -> SudokuBoardValues {
     println!("In file {}", file_path);
 
     let contents = fs::read_to_string(file_path).expect("Should have been able to read the file");
@@ -65,7 +65,7 @@ fn print_board(board: &SudokuBoardValues) {
     })
 }
 
-fn is_valid(board: &SudokuBoardValues) -> bool {
+pub fn is_valid(board: &SudokuBoardValues) -> bool {
     // Board Size valid
     if board.len() != 9 {
         println!("Invalid number of rows. Row count is {}", board.len());
