@@ -1,5 +1,5 @@
-use std::{collections::HashSet, fs};
 use crate::sudoku_board::*;
+use std::{collections::HashSet, fs};
 
 pub fn solve(path_to_board: &str) {
     let initial_board = create_initial_board(path_to_board);
@@ -53,15 +53,22 @@ pub fn create_initial_board(file_path: &str) -> SudokuBoardValues {
 }
 
 fn print_board(board: &SudokuBoardValues) {
-    board.iter().for_each(|row| {
-        row.iter().for_each(|cell| {
+    println!("\n================= BOARD ================");
+    board.iter().enumerate().for_each(|(row_ind, row)| {
+        row.iter().enumerate().for_each(|(cell_ind, cell)| {
             if cell.filled {
                 print!("{}\t|", cell.value);
             } else {
-                print!("[ ]\t|")
+                print!("[ ]\t|");
+            }
+            if (cell_ind + 1) % 3 == 0 {
+                print!("|\t");
             }
         });
         println!();
+		if (row_ind + 1) % 3 == 0 {
+			println!();
+		}
     })
 }
 
@@ -88,7 +95,7 @@ pub fn is_valid(board: &SudokuBoardValues) -> bool {
     let mut row_values_map: HashSet<u16> = HashSet::with_capacity(9);
     let mut column_values_map: HashSet<u16> = HashSet::with_capacity(9);
 
-    for row in 0..=9 {
+    for row in 0..9 {
         print!("curr row {}", row);
         let mut row_sum = 0;
         let mut column_sum = 0;
@@ -96,20 +103,20 @@ pub fn is_valid(board: &SudokuBoardValues) -> bool {
         row_values_map.clear();
         column_values_map.clear();
 
-        for column in 0..=9 {
+        for column in 0..9 {
             let row_value = board[row][column].value;
             let column_value = board[column][row].value;
 
             row_sum += row_value;
             column_sum += column_value;
 
-            if row_values_map.contains(&row_value) {
+            if board[row][column].filled && row_values_map.contains(&row_value) {
                 println!("Duplicate value {row_value} found in row {row}");
                 return false;
             }
             row_values_map.insert(row_value);
 
-            if column_values_map.contains(&column_value) {
+            if board[column][row].filled && column_values_map.contains(&column_value) {
                 println!("Duplicate value {column_value} found in column {row}");
                 return false;
             }
