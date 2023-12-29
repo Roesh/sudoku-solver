@@ -5,7 +5,7 @@ pub fn solve(path_to_board: &str) {
     let initial_board = create_initial_board(path_to_board);
     // initial_board[0][0];
     if !is_valid(&initial_board) {
-        panic!("Board is invalid, exiting")
+        panic!("Board is invalid, exiting");
     }
     print_board(&initial_board);
 }
@@ -18,10 +18,9 @@ pub fn create_initial_board(file_path: &str) -> SudokuBoardValues {
     let initial_board: SudokuBoardValues = contents
         .split('\n')
         .map(|line| {
-            println!("Parsing line: {}", line);
+            // println!("Parsing line: {}", line);
 
-            // unbound_board.push()
-            let new_row = line
+            let new_row: [SudokuCell; 9] = line
                 .split('|')
                 .map(|val| {
                     // println!("Parsing value: {}", val);
@@ -33,7 +32,7 @@ pub fn create_initial_board(file_path: &str) -> SudokuBoardValues {
                     }
                     let parsed = val
                         .trim()
-                        .parse::<u16>()
+                        .parse::<AllowedCellValue>()
                         .expect("Unable to parse numeric digit");
                     if parsed > 9 {
                         panic!("Value was greater than 9");
@@ -43,11 +42,15 @@ pub fn create_initial_board(file_path: &str) -> SudokuBoardValues {
                         value: parsed,
                     }
                 })
-                .collect();
+                .collect::<Vec<SudokuCell>>() //::<Vec<SudokuCell>>()
+                .try_into()
+                .unwrap();
 
             new_row
         })
-        .collect();
+        .collect::<Vec<[SudokuCell; 9]>>()
+        .try_into()
+        .unwrap();
 
     initial_board
 }
@@ -66,9 +69,9 @@ fn print_board(board: &SudokuBoardValues) {
             }
         });
         println!();
-		if (row_ind + 1) % 3 == 0 {
-			println!();
-		}
+        if (row_ind + 1) % 3 == 0 {
+            println!();
+        }
     })
 }
 
@@ -91,12 +94,12 @@ pub fn is_valid(board: &SudokuBoardValues) -> bool {
         return false;
     }
 
-    // Rows valid
-    let mut row_values_map: HashSet<u16> = HashSet::with_capacity(9);
-    let mut column_values_map: HashSet<u16> = HashSet::with_capacity(9);
+    // Rows and columns valid
+    let mut row_values_map: HashSet<AllowedCellValue> = HashSet::with_capacity(9);
+    let mut column_values_map: HashSet<AllowedCellValue> = HashSet::with_capacity(9);
 
     for row in 0..9 {
-        print!("curr row {}", row);
+        // print!("curr row {}", row);
         let mut row_sum = 0;
         let mut column_sum = 0;
 
@@ -134,16 +137,76 @@ pub fn is_valid(board: &SudokuBoardValues) -> bool {
             return false;
         }
     }
-    // let mut row_sum = 0;
-    // let mut column_sum = 0;
-    // [0..10].iter().for_each(|column:&Range<usize>| {
-    // 	row_sum += board[row as usize][column];
-    // 	column_sum += board[column as usize][row]
-    // })
-    // })
-    // Columns valid
+
+    let mut grid_values_map: HashSet<AllowedCellValue> = HashSet::with_capacity(9);
 
     // Subgrids valid
+    for sub_grid in 0..9 {
+        let x_start_index = (sub_grid % 3) * 3;
+        let x_end = x_start_index + 3;
+
+        let y_start_index = (sub_grid / 3) * 3;
+        let y_end = y_start_index + 3;
+
+        let mut grid_sum = 0;
+        grid_values_map.clear();
+
+        for x in x_start_index..x_end {
+            for y in y_start_index..y_end {
+                grid_sum += board[x][y].value;
+                if board[x][y].filled && grid_values_map.contains(&board[x][y].value) {
+                    println!(
+                        "Duplicate value {} found in grid {}",
+                        board[x][y].value,
+                        sub_grid + 1
+                    );
+                    return false;
+                }
+            }
+        }
+
+        if grid_sum > 45 {
+            println!("Grid sum in grid {} exceeds limit", sub_grid + 1);
+            return false;
+        }
+        // Debug subgrid
+        // println!(
+        //     "At subgrid {}, X start is {}, end is {}; Y start is {}, end is {}",
+        //     sub_grid + 1, x_start_index, x_end, y_start_index, y_end
+        // );
+        // for y in 0..9 {
+        //     for x in 0..9 {
+        //         if x >= x_start_index && x < x_end && y >= y_start_index && y < y_end {
+        //             print!("o\t");
+        //         } else {
+        //             print!("x\t");
+        //         }
+        //     }
+        //     println!();
+        // }
+    }
 
     true
+}
+
+fn create_solver(initial_board: SudokuBoardValues) -> SudokuSolver {
+    let mut working_board: [[EditableSudokuCell; 9]; 9] = Default::default();
+
+    for row in 0..9 {
+        for col in 0..9 {
+            let modified_cell = &mut working_board[row as usize][col as usize];
+            modified_cell.row_index = row;
+            modified_cell.col_index = col;
+            modified_cell.filled = initial_board[row as usize][col as usize].filled;
+            modified_cell.value = initial_board[row as usize][col as usize].value;
+            modified_cell.possible_values = HashSet::with_capacity(9);
+        }
+    }
+
+    let mut solver = SudokuSolver {
+        initial_board,
+        working_board,
+    };
+
+    solver
 }
