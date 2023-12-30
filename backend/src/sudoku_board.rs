@@ -1,14 +1,16 @@
 use std::{collections::HashSet};
+use serde::{Deserialize, Serialize};
 
 pub type SudokuBoardValues = [[SudokuCell;9];9];
 pub type AllowedCellValue = u8;
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize,Debug)]
 pub struct SudokuCell {
     pub filled: bool,
     pub value: AllowedCellValue,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct EditableSudokuCell {
 	pub row_index: AllowedCellValue,
 	pub col_index: AllowedCellValue,
@@ -36,6 +38,7 @@ impl Default for EditableSudokuCell {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct SudokuSolver {
 	pub initial_board: SudokuBoardValues,
 	pub working_board: [[EditableSudokuCell; 9]; 9],

@@ -1,13 +1,25 @@
 use crate::sudoku_board::*;
 use std::{collections::HashSet, fs};
 
-pub fn solve(path_to_board: &str) {
+use serde_json::Result;
+
+pub fn solve(path_to_board: &str) -> Result<()>{
     let initial_board = create_initial_board(path_to_board);
     // initial_board[0][0];
     if !is_valid(&initial_board) {
         panic!("Board is invalid, exiting");
     }
     print_board(&initial_board);
+    let mut solution_board = create_solver(initial_board);
+    update_possibilities(&mut solution_board);
+
+	// Serialize it to a JSON string.
+    let j = serde_json::to_string(&solution_board)?;
+
+    // Print, write to a file, or send to an HTTP server.
+    println!("{}", j);
+
+    Ok(())
 }
 
 pub fn create_initial_board(file_path: &str) -> SudokuBoardValues {
@@ -203,10 +215,62 @@ fn create_solver(initial_board: SudokuBoardValues) -> SudokuSolver {
         }
     }
 
-    let mut solver = SudokuSolver {
+    let solver = SudokuSolver {
         initial_board,
         working_board,
     };
 
     solver
+}
+
+fn attempt_row_solve() {}
+
+fn update_possibilities(solution_board: &mut SudokuSolver) {
+    for y in 0..9 {
+        for x in 0..9 {
+            if !solution_board.working_board[x][y].filled {
+                let possible_values = &mut solution_board.working_board[x][y].possible_values;
+                possible_values.clear();
+
+                // Review row (y stays same as column index changes)
+                for column in 1..9 {
+                    if solution_board.working_board[column][y].filled {
+                        possible_values.remove(&solution_board.working_board[column][y].value);
+                    }
+                }
+
+                // Review column
+                for row in 1..9 {
+                    if solution_board.working_board[x][row].filled {
+                        possible_values.remove(&solution_board.working_board[x][row].value);
+                    }
+                }
+
+                // Review grid
+                let x_start_index = (x / 3) * 3;
+                let x_end = x_start_index + 3;
+
+                let y_start_index = (y / 3) * 3;
+                let y_end = y_start_index + 3;
+                for sub_grid_x in x_start_index..x_end {
+                    for sub_grid_y in y_start_index..y_end {
+                        if solution_board.working_board[sub_grid_x][sub_grid_y].filled {
+                            possible_values.remove(
+                                &solution_board.working_board[sub_grid_x][sub_grid_y].value,
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn get_all_possibilites() -> HashSet<AllowedCellValue> {
+    let mut possiblities = HashSet::with_capacity(9);
+    for i in 1..=9 {
+        possiblities.insert(i);
+    }
+
+    possiblities
 }
