@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "serve": "npx vite --host --cors --port 4321"
+  },
+  "dependencies": {
+    "@squaresapp/rawjs": "^1.3.15"
+  }
+}
