@@ -13,7 +13,8 @@ const generateSudokuGrid = () => {
                 border: "1px solid #999",
                 outline: "none",
                 backgroundColor: "#fff"
-            }
+            },
+            // raw.on((e) => console.log(e))
         );
         gridContainer.append(cell);
     }

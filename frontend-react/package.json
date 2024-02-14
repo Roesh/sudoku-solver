@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "serve": "npx vite --host --cors --port 4321"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}
